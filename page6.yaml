@@ -1,22 +1,49 @@
-# page6.yaml: the words on your Week 6 page. make_page6.py puts each answer under its question.
-# A few sentences each, in your own words, about YOUR overlay and YOUR evidence.
-# Leave a blank line between paragraphs. Don't put your name or your full student ID in this file.
+# page6.yaml: the words on my Week 6 page. make_page6.py puts each answer under its question.
 
-repository: https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
+repository: https://github.com/MinHan520/WIC2005_Lab6
 
 answers:
   design:
     question: "Describe your design: hypervisors, tenants, VNIs and addresses. Which tenants overlap, and why did you place each VM where you did?"
-    answer: ""
+    answer: |
+      My data centre has 4 hypervisors, hv1 to hv4, at 10.16.0.1 to 10.16.0.4 on the underlay 10.16.0.0/24. The underlay MTU is 9000 (jumbo frames), the MTU fix I chose. There are 3 tenants, each with its own VNI, numbered 16xx after my address block: shop (VNI 1601, 10.16.60.0/24), bank (VNI 1602, also 10.16.60.0/24) and dev (VNI 1603, 10.16.70.0/24).
+
+      shop and bank overlap on purpose: shop1 and bank1 are both 10.16.60.10, and shop2 and bank2 are both 10.16.60.11. Only the VNI keeps them apart. dev has its own network, to show that not every tenant has to overlap.
+
+      shop spans 3 hypervisors (shop1 on hv1, shop2 on hv2, shop3 on hv3), so one broadcast has to be copied to two other VTEPs and I can watch flooding reach a hypervisor the traffic isn't for. bank1 shares hv1 with shop1, so hv1 runs two tenants side by side (br1601 and br1602). bank2 is on hv4, which hosts no shop VM, so hv4 should never see shop's floods. dev1 is on hv2 and dev2 on hv4, so hv2 and hv4 also host two tenants each.
+
   isolation:
-    question: "Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches the right one â€” and what would have to go wrong for one tenant to see another's traffic."
-    answer: ""
+    question: "Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches the right one — and what would have to go wrong for one tenant to see another's traffic."
+    answer: |
+      shop2 and bank2 both have 10.16.60.11. When shop1 pinged 10.16.60.11, it got 3 replies, and its neighbour table shows MAC 02:00:06:41:00:0b. The middle bytes 00:06:41 are 1601, shop's VNI, so the reply came from shop2. While that ping ran, a capture on bank2 recorded 0 packets. When bank1 pinged the same address, its neighbour table shows 02:00:06:42:00:0b (VNI 1602), which is bank2.
+
+      This works because shop1's port on hv1 is only in br1601, and that bridge's only way out is vxlan1601, which stamps VNI 1601 on every frame. At the far end, a VTEP only hands a VNI 1601 frame to vxlan1601 and br1601, so it can never reach a bank VM. The IP address is never used to choose a tenant. Only the VNI is.
+
+      For one tenant to see another's traffic, something in that chain would have to be wrong. For example: two tenants given the same VNI; a VM's port added to the wrong tenant's bridge; or someone on the underlay sending forged VXLAN packets with another tenant's VNI. VXLAN has no encryption or authentication, so the underlay itself has to be trusted.
+
   flood_learn:
-    question: "Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP learned. With 50 hypervisors in one VNI, how many copies would one broadcast need â€” and how would EVPN change that?"
-    answer: ""
+    question: "Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP learned. With 50 hypervisors in one VNI, how many copies would one broadcast need — and how would EVPN change that?"
+    answer: |
+      Before any traffic, hv1's vxlan1601 table held only two 00:00:00:00:00:00 entries, one for 10.16.0.2 and one for 10.16.0.3: the flood list my tenant_commands() created. When shop1 pinged shop2, it first broadcast an ARP request (who-has 10.16.60.11). hv1 copied it to both hv2 and hv3. The capture on hv3 shows it arriving from 10.16.0.1 with vni 1601, even though the ping had nothing to do with hv3. hv4 got no copy, because it has no shop VM.
+
+      Afterwards, hv1 had learned 02:00:06:41:00:0b (shop2) behind 10.16.0.2, so later frames went only to hv2. hv2 learned shop1's MAC (02:00:06:41:00:0a) behind 10.16.0.1, from the ARP request. hv3 also learned shop1's MAC from the flooded copy, but not shop2's, because shop2's reply was unicast to hv1 only.
+
+      With 50 hypervisors in one VNI, head-end replication means the sending VTEP makes 49 copies of every broadcast, one per other hypervisor. With EVPN, each VTEP advertises its own VMs' MAC and IP addresses in BGP, so every VTEP knows where each MAC is before any traffic flows. A VTEP can even answer ARP requests itself, so most of those 49 copies are never needed. The table is filled by the control plane instead of learned from flooded traffic.
+
   mtu:
     question: "Compare your two MTU fixes using your measurements. Which would you choose for a data centre, what does each cost, and who has to change what?"
-    answer: ""
+    answer: |
+      In the black hole (tenant and underlay both 1500), small pings worked, but 1500-byte packets vanished with no error. The largest don't-fragment ping that worked was 1422 (1450 bytes), because the VXLAN device can only carry 1500 - 50. iperf3 managed 0 bits/sec.
+
+      Fix A (tenant MTU 1450, underlay 1500): 1422 worked and 1423 gave "message too long, mtu=1450". The VM now knows its limit, so there's an error instead of a silent drop. iperf3 reached 5.43 Gbits/sec. Fix B (tenants 1500, underlay 9000): a full 1472-byte ping (1500 bytes) went through, 1473 hit the VM's own normal limit (mtu=1500), and iperf3 reached 5.18 Gbits/sec. On my laptop the two speeds are within normal variation. In theory, B carries 50 more bytes of data per packet, so it should be slightly faster.
+
+      I chose fix B. With fix A, every tenant has to change: every VM must be set to 1450 instead of the normal 1500 default, and any VM left at 1500 falls back into the black hole. With fix B, only the operator changes its own equipment, and tenants keep standard 1500-byte packets without noticing anything. B's cost is that every underlay switch port, NIC and hypervisor must support jumbo frames. One device left at 1500 recreates the black hole for everyone, so it has to be configured and checked everywhere.
+
   p4:
     question: "If your hypervisors' VTEPs were P4 switches running the lecture's vtep.p4, what would have to fill the vtep_encap table, and how? What would replace flood-and-learn?"
-    answer: ""
+    answer: |
+      vtep_encap is keyed on the ingress port and the destination MAC, and its encap action needs the VNI, my VTEP's address and the remote VTEP's address. The P4 program only declares the table, so the control plane has to fill it at run time, like the IPv4 and tunnel entries in the Week 5 lab. For hv1, for example, it would need an entry: port to shop1 + 02:00:06:41:00:0b -> encap(vni 1601, my_vtep 10.16.0.1, remote_vtep 10.16.0.2).
+
+      All the information is already in my design: plan() knows every VM's MAC, VNI and hypervisor. A controller could read overlay.yaml and install the entries on every switch (for example with P4Runtime) before any VM sends a packet. When VMs move, it would update the entries.
+
+      That replaces flood-and-learn with control-plane learning, the same idea as EVPN, where BGP advertises which MAC is behind which VTEP. Broadcasts like ARP would still need copies to the other VTEPs, set up by the controller as a multicast or replication group, or the controller could answer ARP itself. A P4 switch in v1model can't add table entries by itself anyway: to learn, it would have to send a digest to its controller, which writes the entry back.
