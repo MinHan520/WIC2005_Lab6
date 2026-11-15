@@ -37,4 +37,4 @@
 | What stops loops | No TTL in the tunnel header; relies on correct forwarding tables | The outer IP header has a TTL that routers decrement |
 
 ## AI use
-- Claude (Anthropic): step-by-step guidance through the lab commands, explaining outputs, and drafting notes and these answers, which I checked against my own results and reworded.
+- Claude (Anthropic): step-by-step guidance debugging the lab commands.
