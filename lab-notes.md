@@ -62,3 +62,21 @@ ARP, Request who-has 10.16.100.1 tell 10.16.100.2, length 28
 - Inner: overlay ping 10.16.100.1 <-> 10.16.100.2; ARP also tunnelled (VXLAN carries Ethernet frames)
 - s1 forwarded plain UDP; it didn't know about the tunnel (unlike the Week 5 P4 tunnel, where the switch had to parse the tunnel header)
 - Note: a background tcpdump (&) captured 0 packets on my Mac; running the ping in the background and tcpdump in the foreground worked
+
+
+## Part 4 – Cost of tunnelling
+
+```
+h1-eth0: mtu 1500    vxlan100: mtu 1450
+
+h1 ping -M do -c 1 -s 1422 10.16.100.2  -> 1422(1450) bytes: 0% packet loss
+h1 ping -M do -c 1 -s 1423 10.16.100.2  -> ping: local error: message too long, mtu=1450
+
+h1 iperf3 -c 10.16.0.2 -t 5    (underlay)  78.6 Gbits/sec receiver
+h1 iperf3 -c 10.16.100.2 -t 5  (overlay)   55.9 Gbits/sec receiver
+```
+
+- Overlay = ~71% of underlay throughput (~29% slower): encap/decap work + 50 fewer payload bytes per packet
+- 50 bytes = inner Ethernet 14 + VXLAN 8 + outer UDP 8 + outer IPv4 20
+- Ping math: 1422 data + 28 (IPv4 20 + ICMP 8) = 1450 = tunnel MTU
+- Absolute numbers inflated (nothing leaves the laptop); the ratio is what matters
