@@ -1,0 +1,35 @@
+# overlay.yaml: my Week 6 data centre (NN=16), built by build_overlay.py, published by make_page6.py.
+# Addresses: hypervisors get .1 .2 .3 .4 of the underlay; a tenant's VMs get .10 .11 .12 in order.
+# MACs are 02:VV:VV:VV:00:XX (VNI in the middle, last byte of the IP at the end).
+
+student_id_last4: "5016"
+
+underlay:
+  network: 10.16.0.0/24
+  mtu: 1500                    # the largest IP packet the underlay carries
+
+hypervisors: [hv1, hv2, hv3, hv4]
+
+tenants:
+  - name: shop                 # spans 3 hypervisors: shows flood-and-learn
+    vni: 1601
+    network: 10.16.60.0/24
+    mtu: 1500                  # the largest IP packet this tenant's VMs send
+    vms:
+      - [shop1, hv1]
+      - [shop2, hv2]
+      - [shop3, hv3]
+  - name: bank                 # same addresses as shop on purpose, kept apart by VNI
+    vni: 1602
+    network: 10.16.60.0/24
+    mtu: 1500
+    vms:
+      - [bank1, hv1]
+      - [bank2, hv4]
+  - name: dev                  # its own network, no overlap
+    vni: 1603
+    network: 10.16.70.0/24
+    mtu: 1500
+    vms:
+      - [dev1, hv2]
+      - [dev2, hv4]
