@@ -23,3 +23,19 @@ h1-eth0@if12     UP       00:00:00:00:00:01 <BROADCAST,MULTICAST,UP,LOWER_UP>
 - h1 = bash process pid 26 with its own network namespace; h2 = pid 28
 - h1 only sees h1-eth0; its peer (@if12) is the switch port s1-eth1
 - Mininet host = process + network namespace; Mininet cable = veth pair
+
+
+## Part 2 – Week 1's network built by hand
+
+```
+# ip netns exec red ping -c 2 10.16.9.2
+2 packets transmitted, 2 received, 0% packet loss
+
+# bridge fdb show br br0   (learned entries only)
+c2:b6:bd:a2:24:94 dev red-br master br0
+22:ce:66:43:05:c8 dev blue-br master br0
+```
+
+- Built 2 namespaces (red, blue), 2 veth pairs, 1 bridge (br0)
+- Ping works; bridge learned veth-red's MAC on port red-br and veth-blue's MAC on port blue-br
+- That is all Mininet does: namespaces + veth pairs + bridge
