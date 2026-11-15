@@ -1,34 +1,190 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Overlay 5016: my data centre, from data</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.55; color: #1f2937; }
-  h1 { font-size: 1.6rem; margin-bottom: .2rem; } h2 { margin-top: 2.2rem; border-bottom: 1px solid #e5e7eb; }
-  table { border-collapse: collapse; width: 100%; font-size: .92rem; margin-bottom: 1rem; } th, td { border-bottom: 1px solid #e5e7eb; padding: .35rem .5rem; text-align: left; }
-  pre { background: #111827; color: #f3f4f6; padding: .8rem; border-radius: .4rem; overflow-x: auto; font-size: .82rem; }
-  pre.mermaid { background: none; color: inherit; } pre.missing { background: #fef2f2; color: #991b1b; }
-  .meta, .file { color: #6b7280; font-size: .85rem; } code { font-size: .88em; }
-</style>
-</head>
-<body>
-<p class="meta"><a href="../">← Week 2: my network, built from data</a> · <a href="../week3/">Week 3: routed, from data</a></p>
-<h1>My data centre overlay, from data</h1>
-<p class="meta">Student ID ending 5016 · generated from <code>overlay.yaml</code> by <code>make_page6.py</code> on 2026-11-15</p>
-<p id="summary">4 hypervisors and 3 tenants (7 VMs) on <code>10.16.0.0/16</code>, joined by VXLAN.
-Every tenant's MTU was checked against the underlay before anything was built.</p>
-<p>Repository: <a id="repository" href="https://github.com/MinHan520/WIC2005_Lab6">https://github.com/MinHan520/WIC2005_Lab6</a></p>
 
-<h2>The design</h2>
-<h3>Hypervisors and the underlay</h3>
-<section id="hypervisors"><p>Underlay <code>10.16.0.0/24</code>, MTU 9000.</p><table><tr><th>Hypervisor</th><th>Underlay address</th><th>VMs</th></tr><tr><td>hv1</td><td><code>10.16.0.1</code></td><td>shop1 (shop), bank1 (bank)</td></tr><tr><td>hv2</td><td><code>10.16.0.2</code></td><td>shop2 (shop), dev1 (dev)</td></tr><tr><td>hv3</td><td><code>10.16.0.3</code></td><td>shop3 (shop)</td></tr><tr><td>hv4</td><td><code>10.16.0.4</code></td><td>bank2 (bank), dev2 (dev)</td></tr></table></section>
-<section id="tenants"><h3>shop: VNI 1601, <code>10.16.60.0/24</code>, MTU 1500</h3><table><tr><th>VM</th><th>On</th><th>Address</th><th>MAC</th></tr><tr><td>shop1</td><td>hv1</td><td><code>10.16.60.10</code></td><td><code>02:00:06:41:00:0a</code></td></tr><tr><td>shop2</td><td>hv2</td><td><code>10.16.60.11</code></td><td><code>02:00:06:41:00:0b</code></td></tr><tr><td>shop3</td><td>hv3</td><td><code>10.16.60.12</code></td><td><code>02:00:06:41:00:0c</code></td></tr></table>
-<h3>bank: VNI 1602, <code>10.16.60.0/24</code>, MTU 1500</h3><table><tr><th>VM</th><th>On</th><th>Address</th><th>MAC</th></tr><tr><td>bank1</td><td>hv1</td><td><code>10.16.60.10</code></td><td><code>02:00:06:42:00:0a</code></td></tr><tr><td>bank2</td><td>hv4</td><td><code>10.16.60.11</code></td><td><code>02:00:06:42:00:0b</code></td></tr></table>
-<h3>dev: VNI 1603, <code>10.16.70.0/24</code>, MTU 1500</h3><table><tr><th>VM</th><th>On</th><th>Address</th><th>MAC</th></tr><tr><td>dev1</td><td>hv2</td><td><code>10.16.70.10</code></td><td><code>02:00:06:43:00:0a</code></td></tr><tr><td>dev2</td><td>hv4</td><td><code>10.16.70.11</code></td><td><code>02:00:06:43:00:0b</code></td></tr></table></section>
-<h3>Diagram</h3>
-<pre class="mermaid" id="diagram">graph TB
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Overlay 5016: my data centre, from data</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 52rem;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.55;
+      color: #1f2937;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: .2rem;
+    }
+
+    h2 {
+      margin-top: 2.2rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: .92rem;
+      margin-bottom: 1rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: .35rem .5rem;
+      text-align: left;
+    }
+
+    pre {
+      background: #111827;
+      color: #f3f4f6;
+      padding: .8rem;
+      border-radius: .4rem;
+      overflow-x: auto;
+      font-size: .82rem;
+    }
+
+    pre.mermaid {
+      background: none;
+      color: inherit;
+    }
+
+    pre.missing {
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .meta,
+    .file {
+      color: #6b7280;
+      font-size: .85rem;
+    }
+
+    code {
+      font-size: .88em;
+    }
+  </style>
+</head>
+
+<body>
+  <p class="meta"><a href="https://minhan520.github.io/WIC2005_Lab3/week3/">← Week 3: routed, from data</a></p>
+  <h1>My data centre overlay, from data</h1>
+  <p class="meta">Student ID ending 5016 · generated from <code>overlay.yaml</code> by <code>make_page6.py</code> on
+    2026-11-15</p>
+  <p id="summary">4 hypervisors and 3 tenants (7 VMs) on <code>10.16.0.0/16</code>, joined by VXLAN.
+    Every tenant's MTU was checked against the underlay before anything was built.</p>
+  <p>Repository: <a id="repository"
+      href="https://github.com/MinHan520/WIC2005_Lab6">https://github.com/MinHan520/WIC2005_Lab6</a></p>
+
+  <h2>The design</h2>
+  <h3>Hypervisors and the underlay</h3>
+  <section id="hypervisors">
+    <p>Underlay <code>10.16.0.0/24</code>, MTU 9000.</p>
+    <table>
+      <tr>
+        <th>Hypervisor</th>
+        <th>Underlay address</th>
+        <th>VMs</th>
+      </tr>
+      <tr>
+        <td>hv1</td>
+        <td><code>10.16.0.1</code></td>
+        <td>shop1 (shop), bank1 (bank)</td>
+      </tr>
+      <tr>
+        <td>hv2</td>
+        <td><code>10.16.0.2</code></td>
+        <td>shop2 (shop), dev1 (dev)</td>
+      </tr>
+      <tr>
+        <td>hv3</td>
+        <td><code>10.16.0.3</code></td>
+        <td>shop3 (shop)</td>
+      </tr>
+      <tr>
+        <td>hv4</td>
+        <td><code>10.16.0.4</code></td>
+        <td>bank2 (bank), dev2 (dev)</td>
+      </tr>
+    </table>
+  </section>
+  <section id="tenants">
+    <h3>shop: VNI 1601, <code>10.16.60.0/24</code>, MTU 1500</h3>
+    <table>
+      <tr>
+        <th>VM</th>
+        <th>On</th>
+        <th>Address</th>
+        <th>MAC</th>
+      </tr>
+      <tr>
+        <td>shop1</td>
+        <td>hv1</td>
+        <td><code>10.16.60.10</code></td>
+        <td><code>02:00:06:41:00:0a</code></td>
+      </tr>
+      <tr>
+        <td>shop2</td>
+        <td>hv2</td>
+        <td><code>10.16.60.11</code></td>
+        <td><code>02:00:06:41:00:0b</code></td>
+      </tr>
+      <tr>
+        <td>shop3</td>
+        <td>hv3</td>
+        <td><code>10.16.60.12</code></td>
+        <td><code>02:00:06:41:00:0c</code></td>
+      </tr>
+    </table>
+    <h3>bank: VNI 1602, <code>10.16.60.0/24</code>, MTU 1500</h3>
+    <table>
+      <tr>
+        <th>VM</th>
+        <th>On</th>
+        <th>Address</th>
+        <th>MAC</th>
+      </tr>
+      <tr>
+        <td>bank1</td>
+        <td>hv1</td>
+        <td><code>10.16.60.10</code></td>
+        <td><code>02:00:06:42:00:0a</code></td>
+      </tr>
+      <tr>
+        <td>bank2</td>
+        <td>hv4</td>
+        <td><code>10.16.60.11</code></td>
+        <td><code>02:00:06:42:00:0b</code></td>
+      </tr>
+    </table>
+    <h3>dev: VNI 1603, <code>10.16.70.0/24</code>, MTU 1500</h3>
+    <table>
+      <tr>
+        <th>VM</th>
+        <th>On</th>
+        <th>Address</th>
+        <th>MAC</th>
+      </tr>
+      <tr>
+        <td>dev1</td>
+        <td>hv2</td>
+        <td><code>10.16.70.10</code></td>
+        <td><code>02:00:06:43:00:0a</code></td>
+      </tr>
+      <tr>
+        <td>dev2</td>
+        <td>hv4</td>
+        <td><code>10.16.70.11</code></td>
+        <td><code>02:00:06:43:00:0b</code></td>
+      </tr>
+    </table>
+  </section>
+  <h3>Diagram</h3>
+  <pre class="mermaid" id="diagram">graph TB
   s1[[underlay switch s1]]
   hv1[&quot;hv1&lt;br&gt;10.16.0.1&quot;] --- s1
   hv2[&quot;hv2&lt;br&gt;10.16.0.2&quot;] --- s1
@@ -42,10 +198,11 @@ Every tenant's MTU was checked against the underlay before anything was built.</
   dev1(&quot;dev1&lt;br&gt;10.16.70.10&lt;br&gt;dev · VNI 1603&quot;) --- hv2
   dev2(&quot;dev2&lt;br&gt;10.16.70.11&lt;br&gt;dev · VNI 1603&quot;) --- hv4</pre>
 
-<h2>VTEP commands, as built</h2>
-<p>What <code>tenant_commands()</code> ran on each hypervisor.</p>
-<section id="commands"><h3>hv1</h3>
-<pre id="commands-hv1">ip link add br1601 type bridge
+  <h2>VTEP commands, as built</h2>
+  <p>What <code>tenant_commands()</code> ran on each hypervisor.</p>
+  <section id="commands">
+    <h3>hv1</h3>
+    <pre id="commands-hv1">ip link add br1601 type bridge
 ip link set br1601 up
 ip link add vxlan1601 type vxlan id 1601 local 10.16.0.1 dstport 4789 dev hv1-eth0
 ip link set vxlan1601 master br1601
@@ -62,8 +219,8 @@ ip link set vxlan1602 up
 ip link set hv1-eth2 master br1602
 ip link set hv1-eth2 up
 bridge fdb append 00:00:00:00:00:00 dev vxlan1602 dst 10.16.0.4</pre>
-<h3>hv2</h3>
-<pre id="commands-hv2">ip link add br1601 type bridge
+    <h3>hv2</h3>
+    <pre id="commands-hv2">ip link add br1601 type bridge
 ip link set br1601 up
 ip link add vxlan1601 type vxlan id 1601 local 10.16.0.2 dstport 4789 dev hv2-eth0
 ip link set vxlan1601 master br1601
@@ -80,8 +237,8 @@ ip link set vxlan1603 up
 ip link set hv2-eth2 master br1603
 ip link set hv2-eth2 up
 bridge fdb append 00:00:00:00:00:00 dev vxlan1603 dst 10.16.0.4</pre>
-<h3>hv3</h3>
-<pre id="commands-hv3">ip link add br1601 type bridge
+    <h3>hv3</h3>
+    <pre id="commands-hv3">ip link add br1601 type bridge
 ip link set br1601 up
 ip link add vxlan1601 type vxlan id 1601 local 10.16.0.3 dstport 4789 dev hv3-eth0
 ip link set vxlan1601 master br1601
@@ -90,8 +247,8 @@ ip link set hv3-eth1 master br1601
 ip link set hv3-eth1 up
 bridge fdb append 00:00:00:00:00:00 dev vxlan1601 dst 10.16.0.1
 bridge fdb append 00:00:00:00:00:00 dev vxlan1601 dst 10.16.0.2</pre>
-<h3>hv4</h3>
-<pre id="commands-hv4">ip link add br1602 type bridge
+    <h3>hv4</h3>
+    <pre id="commands-hv4">ip link add br1602 type bridge
 ip link set br1602 up
 ip link add vxlan1602 type vxlan id 1602 local 10.16.0.4 dstport 4789 dev hv4-eth0
 ip link set vxlan1602 master br1602
@@ -106,18 +263,20 @@ ip link set vxlan1603 master br1603
 ip link set vxlan1603 up
 ip link set hv4-eth2 master br1603
 ip link set hv4-eth2 up
-bridge fdb append 00:00:00:00:00:00 dev vxlan1603 dst 10.16.0.2</pre></section>
+bridge fdb append 00:00:00:00:00:00 dev vxlan1603 dst 10.16.0.2</pre>
+  </section>
 
-<h2>Evidence from the running overlay</h2>
-<section id="evidence"><h3>check_mtu() refusing the black-hole design</h3>
-<p class="file">evidence6/check.txt</p>
-<pre id="evidence-check">PROBLEM: tenant shop: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
+  <h2>Evidence from the running overlay</h2>
+  <section id="evidence">
+    <h3>check_mtu() refusing the black-hole design</h3>
+    <p class="file">evidence6/check.txt</p>
+    <pre id="evidence-check">PROBLEM: tenant shop: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
 PROBLEM: tenant bank: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
 PROBLEM: tenant dev: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
 Fix the design and try again: nothing was built.</pre>
-<h3>Flood and learn: the VTEP table before, the flooded broadcast, the table after</h3>
-<p class="file">evidence6/flood.txt</p>
-<pre id="evidence-flood">== hv1: vxlan1601 before any traffic
+    <h3>Flood and learn: the VTEP table before, the flooded broadcast, the table after</h3>
+    <p class="file">evidence6/flood.txt</p>
+    <pre id="evidence-flood">== hv1: vxlan1601 before any traffic
 8a:eb:8c:3a:c6:39 vlan 1 master br1601 permanent
 8a:eb:8c:3a:c6:39 master br1601 permanent
 00:00:00:00:00:00 dst 10.16.0.2 self permanent
@@ -159,9 +318,9 @@ a6:54:f4:7a:64:1d master br1601 permanent
 02:00:06:41:00:0a dst 10.16.0.1 self 
 00:00:00:00:00:00 dst 10.16.0.1 self permanent
 00:00:00:00:00:00 dst 10.16.0.2 self permanent</pre>
-<h3>Two tenants, one address: who answers</h3>
-<p class="file">evidence6/isolation.txt</p>
-<pre id="evidence-isolation">PING 10.16.60.11 (10.16.60.11) 56(84) bytes of data.
+    <h3>Two tenants, one address: who answers</h3>
+    <p class="file">evidence6/isolation.txt</p>
+    <pre id="evidence-isolation">PING 10.16.60.11 (10.16.60.11) 56(84) bytes of data.
 64 bytes from 10.16.60.11: icmp_seq=1 ttl=64 time=0.814 ms
 64 bytes from 10.16.60.11: icmp_seq=2 ttl=64 time=0.351 ms
 64 bytes from 10.16.60.11: icmp_seq=3 ttl=64 time=0.234 ms
@@ -186,9 +345,9 @@ PING 10.16.60.11 (10.16.60.11) 56(84) bytes of data.
 2 packets transmitted, 2 received, 0% packet loss, time 1003ms
 rtt min/avg/max/mdev = 0.409/1.292/2.175/0.883 ms
 10.16.60.11 dev bank1-eth0 lladdr 02:00:06:42:00:0b REACHABLE</pre>
-<h3>The black hole: tenant MTU 1500 on a 1500-byte underlay</h3>
-<p class="file">evidence6/blackhole.txt</p>
-<pre id="evidence-blackhole">== small ping
+    <h3>The black hole: tenant MTU 1500 on a 1500-byte underlay</h3>
+    <p class="file">evidence6/blackhole.txt</p>
+    <pre id="evidence-blackhole">== small ping
 PING 10.16.60.11 (10.16.60.11) 56(84) bytes of data.
 64 bytes from 10.16.60.11: icmp_seq=1 ttl=64 time=0.664 ms
 64 bytes from 10.16.60.11: icmp_seq=2 ttl=64 time=0.188 ms
@@ -244,9 +403,9 @@ PING 10.16.60.11 (10.16.60.11) 1427(1455) bytes of data.
 
 --- 10.16.60.11 ping statistics ---
 1 packets transmitted, 0 received, 100% packet loss, time 0ms</pre>
-<h3>Two fixes, measured</h3>
-<p class="file">evidence6/fixes.txt</p>
-<pre id="evidence-fixes">== fix A: tenant MTU 1450
+    <h3>Two fixes, measured</h3>
+    <p class="file">evidence6/fixes.txt</p>
+    <pre id="evidence-fixes">== fix A: tenant MTU 1450
 PING 10.16.60.11 (10.16.60.11) 1422(1450) bytes of data.
 1430 bytes from 10.16.60.11: icmp_seq=1 ttl=64 time=1.63 ms
 
@@ -299,16 +458,97 @@ Connecting to host 10.16.60.11, port 5201
 [  5]   0.00-5.00   sec  3.02 GBytes  5.18 Gbits/sec    1             sender
 [  5]   0.00-5.00   sec  3.02 GBytes  5.18 Gbits/sec                  receiver
 
-iperf Done.</pre></section>
+iperf Done.</pre>
+  </section>
 
-<h2>What I learned</h2>
-<section id="answers"><section id="answer-design"><h3>Describe your design: hypervisors, tenants, VNIs and addresses. Which tenants overlap, and why did you place each VM where you did?</h3><p>My data centre has 4 hypervisors, hv1 to hv4, at 10.16.0.1 to 10.16.0.4 on the underlay 10.16.0.0/24. The underlay MTU is 9000 (jumbo frames), the MTU fix I chose. There are 3 tenants, each with its own VNI, numbered 16xx after my address block: shop (VNI 1601, 10.16.60.0/24), bank (VNI 1602, also 10.16.60.0/24) and dev (VNI 1603, 10.16.70.0/24).</p><p>shop and bank overlap on purpose: shop1 and bank1 are both 10.16.60.10, and shop2 and bank2 are both 10.16.60.11. Only the VNI keeps them apart. dev has its own network, to show that not every tenant has to overlap.</p><p>shop spans 3 hypervisors (shop1 on hv1, shop2 on hv2, shop3 on hv3), so one broadcast has to be copied to two other VTEPs and I can watch flooding reach a hypervisor the traffic isn&#x27;t for. bank1 shares hv1 with shop1, so hv1 runs two tenants side by side (br1601 and br1602). bank2 is on hv4, which hosts no shop VM, so hv4 should never see shop&#x27;s floods. dev1 is on hv2 and dev2 on hv4, so hv2 and hv4 also host two tenants each.</p></section>
-<section id="answer-isolation"><h3>Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches the right one — and what would have to go wrong for one tenant to see another&#x27;s traffic.</h3><p>shop2 and bank2 both have 10.16.60.11. When shop1 pinged 10.16.60.11, it got 3 replies, and its neighbour table shows MAC 02:00:06:41:00:0b. The middle bytes 00:06:41 are 1601, shop&#x27;s VNI, so the reply came from shop2. While that ping ran, a capture on bank2 recorded 0 packets. When bank1 pinged the same address, its neighbour table shows 02:00:06:42:00:0b (VNI 1602), which is bank2.</p><p>This works because shop1&#x27;s port on hv1 is only in br1601, and that bridge&#x27;s only way out is vxlan1601, which stamps VNI 1601 on every frame. At the far end, a VTEP only hands a VNI 1601 frame to vxlan1601 and br1601, so it can never reach a bank VM. The IP address is never used to choose a tenant. Only the VNI is.</p><p>For one tenant to see another&#x27;s traffic, something in that chain would have to be wrong. For example: two tenants given the same VNI; a VM&#x27;s port added to the wrong tenant&#x27;s bridge; or someone on the underlay sending forged VXLAN packets with another tenant&#x27;s VNI. VXLAN has no encryption or authentication, so the underlay itself has to be trusted.</p></section>
-<section id="answer-flood_learn"><h3>Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP learned. With 50 hypervisors in one VNI, how many copies would one broadcast need — and how would EVPN change that?</h3><p>Before any traffic, hv1&#x27;s vxlan1601 table held only two 00:00:00:00:00:00 entries, one for 10.16.0.2 and one for 10.16.0.3: the flood list my tenant_commands() created. When shop1 pinged shop2, it first broadcast an ARP request (who-has 10.16.60.11). hv1 copied it to both hv2 and hv3. The capture on hv3 shows it arriving from 10.16.0.1 with vni 1601, even though the ping had nothing to do with hv3. hv4 got no copy, because it has no shop VM.</p><p>Afterwards, hv1 had learned 02:00:06:41:00:0b (shop2) behind 10.16.0.2, so later frames went only to hv2. hv2 learned shop1&#x27;s MAC (02:00:06:41:00:0a) behind 10.16.0.1, from the ARP request. hv3 also learned shop1&#x27;s MAC from the flooded copy, but not shop2&#x27;s, because shop2&#x27;s reply was unicast to hv1 only.</p><p>With 50 hypervisors in one VNI, head-end replication means the sending VTEP makes 49 copies of every broadcast, one per other hypervisor. With EVPN, each VTEP advertises its own VMs&#x27; MAC and IP addresses in BGP, so every VTEP knows where each MAC is before any traffic flows. A VTEP can even answer ARP requests itself, so most of those 49 copies are never needed. The table is filled by the control plane instead of learned from flooded traffic.</p></section>
-<section id="answer-mtu"><h3>Compare your two MTU fixes using your measurements. Which would you choose for a data centre, what does each cost, and who has to change what?</h3><p>In the black hole (tenant and underlay both 1500), small pings worked, but 1500-byte packets vanished with no error. The largest don&#x27;t-fragment ping that worked was 1422 (1450 bytes), because the VXLAN device can only carry 1500 - 50. iperf3 managed 0 bits/sec.</p><p>Fix A (tenant MTU 1450, underlay 1500): 1422 worked and 1423 gave &quot;message too long, mtu=1450&quot;. The VM now knows its limit, so there&#x27;s an error instead of a silent drop. iperf3 reached 5.43 Gbits/sec. Fix B (tenants 1500, underlay 9000): a full 1472-byte ping (1500 bytes) went through, 1473 hit the VM&#x27;s own normal limit (mtu=1500), and iperf3 reached 5.18 Gbits/sec. On my laptop the two speeds are within normal variation. In theory, B carries 50 more bytes of data per packet, so it should be slightly faster.</p><p>I chose fix B. With fix A, every tenant has to change: every VM must be set to 1450 instead of the normal 1500 default, and any VM left at 1500 falls back into the black hole. With fix B, only the operator changes its own equipment, and tenants keep standard 1500-byte packets without noticing anything. B&#x27;s cost is that every underlay switch port, NIC and hypervisor must support jumbo frames. One device left at 1500 recreates the black hole for everyone, so it has to be configured and checked everywhere.</p></section>
-<section id="answer-p4"><h3>If your hypervisors&#x27; VTEPs were P4 switches running the lecture&#x27;s vtep.p4, what would have to fill the vtep_encap table, and how? What would replace flood-and-learn?</h3><p>vtep_encap is keyed on the ingress port and the destination MAC, and its encap action needs the VNI, my VTEP&#x27;s address and the remote VTEP&#x27;s address. The P4 program only declares the table, so the control plane has to fill it at run time, like the IPv4 and tunnel entries in the Week 5 lab. For hv1, for example, it would need an entry: port to shop1 + 02:00:06:41:00:0b -&gt; encap(vni 1601, my_vtep 10.16.0.1, remote_vtep 10.16.0.2).</p><p>All the information is already in my design: plan() knows every VM&#x27;s MAC, VNI and hypervisor. A controller could read overlay.yaml and install the entries on every switch (for example with P4Runtime) before any VM sends a packet. When VMs move, it would update the entries.</p><p>That replaces flood-and-learn with control-plane learning, the same idea as EVPN, where BGP advertises which MAC is behind which VTEP. Broadcasts like ARP would still need copies to the other VTEPs, set up by the controller as a multicast or replication group, or the controller could answer ARP itself. A P4 switch in v1model can&#x27;t add table entries by itself anyway: to learn, it would have to send a digest to its controller, which writes the entry back.</p></section></section>
+  <h2>What I learned</h2>
+  <section id="answers">
+    <section id="answer-design">
+      <h3>Describe your design: hypervisors, tenants, VNIs and addresses. Which tenants overlap, and why did you place
+        each VM where you did?</h3>
+      <p>My data centre has 4 hypervisors, hv1 to hv4, at 10.16.0.1 to 10.16.0.4 on the underlay 10.16.0.0/24. The
+        underlay MTU is 9000 (jumbo frames), the MTU fix I chose. There are 3 tenants, each with its own VNI, numbered
+        16xx after my address block: shop (VNI 1601, 10.16.60.0/24), bank (VNI 1602, also 10.16.60.0/24) and dev (VNI
+        1603, 10.16.70.0/24).</p>
+      <p>shop and bank overlap on purpose: shop1 and bank1 are both 10.16.60.10, and shop2 and bank2 are both
+        10.16.60.11. Only the VNI keeps them apart. dev has its own network, to show that not every tenant has to
+        overlap.</p>
+      <p>shop spans 3 hypervisors (shop1 on hv1, shop2 on hv2, shop3 on hv3), so one broadcast has to be copied to two
+        other VTEPs and I can watch flooding reach a hypervisor the traffic isn&#x27;t for. bank1 shares hv1 with shop1,
+        so hv1 runs two tenants side by side (br1601 and br1602). bank2 is on hv4, which hosts no shop VM, so hv4 should
+        never see shop&#x27;s floods. dev1 is on hv2 and dev2 on hv4, so hv2 and hv4 also host two tenants each.</p>
+    </section>
+    <section id="answer-isolation">
+      <h3>Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches the right one — and
+        what would have to go wrong for one tenant to see another&#x27;s traffic.</h3>
+      <p>shop2 and bank2 both have 10.16.60.11. When shop1 pinged 10.16.60.11, it got 3 replies, and its neighbour table
+        shows MAC 02:00:06:41:00:0b. The middle bytes 00:06:41 are 1601, shop&#x27;s VNI, so the reply came from shop2.
+        While that ping ran, a capture on bank2 recorded 0 packets. When bank1 pinged the same address, its neighbour
+        table shows 02:00:06:42:00:0b (VNI 1602), which is bank2.</p>
+      <p>This works because shop1&#x27;s port on hv1 is only in br1601, and that bridge&#x27;s only way out is
+        vxlan1601, which stamps VNI 1601 on every frame. At the far end, a VTEP only hands a VNI 1601 frame to vxlan1601
+        and br1601, so it can never reach a bank VM. The IP address is never used to choose a tenant. Only the VNI is.
+      </p>
+      <p>For one tenant to see another&#x27;s traffic, something in that chain would have to be wrong. For example: two
+        tenants given the same VNI; a VM&#x27;s port added to the wrong tenant&#x27;s bridge; or someone on the underlay
+        sending forged VXLAN packets with another tenant&#x27;s VNI. VXLAN has no encryption or authentication, so the
+        underlay itself has to be trusted.</p>
+    </section>
+    <section id="answer-flood_learn">
+      <h3>Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP learned. With 50
+        hypervisors in one VNI, how many copies would one broadcast need — and how would EVPN change that?</h3>
+      <p>Before any traffic, hv1&#x27;s vxlan1601 table held only two 00:00:00:00:00:00 entries, one for 10.16.0.2 and
+        one for 10.16.0.3: the flood list my tenant_commands() created. When shop1 pinged shop2, it first broadcast an
+        ARP request (who-has 10.16.60.11). hv1 copied it to both hv2 and hv3. The capture on hv3 shows it arriving from
+        10.16.0.1 with vni 1601, even though the ping had nothing to do with hv3. hv4 got no copy, because it has no
+        shop VM.</p>
+      <p>Afterwards, hv1 had learned 02:00:06:41:00:0b (shop2) behind 10.16.0.2, so later frames went only to hv2. hv2
+        learned shop1&#x27;s MAC (02:00:06:41:00:0a) behind 10.16.0.1, from the ARP request. hv3 also learned
+        shop1&#x27;s MAC from the flooded copy, but not shop2&#x27;s, because shop2&#x27;s reply was unicast to hv1
+        only.</p>
+      <p>With 50 hypervisors in one VNI, head-end replication means the sending VTEP makes 49 copies of every broadcast,
+        one per other hypervisor. With EVPN, each VTEP advertises its own VMs&#x27; MAC and IP addresses in BGP, so
+        every VTEP knows where each MAC is before any traffic flows. A VTEP can even answer ARP requests itself, so most
+        of those 49 copies are never needed. The table is filled by the control plane instead of learned from flooded
+        traffic.</p>
+    </section>
+    <section id="answer-mtu">
+      <h3>Compare your two MTU fixes using your measurements. Which would you choose for a data centre, what does each
+        cost, and who has to change what?</h3>
+      <p>In the black hole (tenant and underlay both 1500), small pings worked, but 1500-byte packets vanished with no
+        error. The largest don&#x27;t-fragment ping that worked was 1422 (1450 bytes), because the VXLAN device can only
+        carry 1500 - 50. iperf3 managed 0 bits/sec.</p>
+      <p>Fix A (tenant MTU 1450, underlay 1500): 1422 worked and 1423 gave &quot;message too long, mtu=1450&quot;. The
+        VM now knows its limit, so there&#x27;s an error instead of a silent drop. iperf3 reached 5.43 Gbits/sec. Fix B
+        (tenants 1500, underlay 9000): a full 1472-byte ping (1500 bytes) went through, 1473 hit the VM&#x27;s own
+        normal limit (mtu=1500), and iperf3 reached 5.18 Gbits/sec. On my laptop the two speeds are within normal
+        variation. In theory, B carries 50 more bytes of data per packet, so it should be slightly faster.</p>
+      <p>I chose fix B. With fix A, every tenant has to change: every VM must be set to 1450 instead of the normal 1500
+        default, and any VM left at 1500 falls back into the black hole. With fix B, only the operator changes its own
+        equipment, and tenants keep standard 1500-byte packets without noticing anything. B&#x27;s cost is that every
+        underlay switch port, NIC and hypervisor must support jumbo frames. One device left at 1500 recreates the black
+        hole for everyone, so it has to be configured and checked everywhere.</p>
+    </section>
+    <section id="answer-p4">
+      <h3>If your hypervisors&#x27; VTEPs were P4 switches running the lecture&#x27;s vtep.p4, what would have to fill
+        the vtep_encap table, and how? What would replace flood-and-learn?</h3>
+      <p>vtep_encap is keyed on the ingress port and the destination MAC, and its encap action needs the VNI, my
+        VTEP&#x27;s address and the remote VTEP&#x27;s address. The P4 program only declares the table, so the control
+        plane has to fill it at run time, like the IPv4 and tunnel entries in the Week 5 lab. For hv1, for example, it
+        would need an entry: port to shop1 + 02:00:06:41:00:0b -&gt; encap(vni 1601, my_vtep 10.16.0.1, remote_vtep
+        10.16.0.2).</p>
+      <p>All the information is already in my design: plan() knows every VM&#x27;s MAC, VNI and hypervisor. A controller
+        could read overlay.yaml and install the entries on every switch (for example with P4Runtime) before any VM sends
+        a packet. When VMs move, it would update the entries.</p>
+      <p>That replaces flood-and-learn with control-plane learning, the same idea as EVPN, where BGP advertises which
+        MAC is behind which VTEP. Broadcasts like ARP would still need copies to the other VTEPs, set up by the
+        controller as a multicast or replication group, or the controller could answer ARP itself. A P4 switch in
+        v1model can&#x27;t add table entries by itself anyway: to learn, it would have to send a digest to its
+        controller, which writes the entry back.</p>
+    </section>
+  </section>
 
-<script type="application/json" id="overlay-data">{
+  <script type="application/json" id="overlay-data">{
   "design": {
     "student_id_last4": "5016",
     "underlay": {
@@ -446,9 +686,10 @@ iperf Done.</pre></section>
     ]
   }
 }</script>
-<script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({ startOnLoad: true });
-</script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true });
+  </script>
 </body>
+
 </html>
