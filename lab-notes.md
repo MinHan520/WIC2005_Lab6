@@ -80,3 +80,19 @@ h1 iperf3 -c 10.16.100.2 -t 5  (overlay)   55.9 Gbits/sec receiver
 - 50 bytes = inner Ethernet 14 + VXLAN 8 + outer UDP 8 + outer IPv4 20
 - Ping math: 1422 data + 28 (IPv4 20 + ICMP 8) = 1450 = tunnel MTU
 - Absolute numbers inflated (nothing leaves the laptop); the ratio is what matters
+
+
+
+## Part 5 – VXLAN over an IPv6 underlay (VNI 106, overlay 10.16.106.0/24)
+
+```
+h1 ping -6 -c 2 fd00:5016::2        -> IPv6 underlay reachable
+h1 ping -c 2 10.16.106.2            -> 2 received, 0% packet loss
+h1 ip link show vxlan106            -> mtu 1430
+h1 ping -M do -c 1 -s 1402 ...      -> 1402(1430) bytes: 0% packet loss
+h1 ping -M do -c 1 -s 1403 ...      -> message too long, mtu=1430
+```
+
+- IPv6 outer header = 40 bytes vs IPv4 = 20, so overhead = 14 + 8 + 8 + 40 = 70 bytes
+- Tunnel MTU = 1500 - 70 = 1430 (vs 1450 over IPv4)
+- The overlay is still IPv4: the underlay and overlay protocols are independent
