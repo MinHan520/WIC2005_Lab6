@@ -122,3 +122,16 @@ h1 ip link set vxlan100 mtu 1500 -> RTNETLINK answers: Invalid argument
 - No error is sent back, so it's a "black hole"
 - Both drop counters rise together: the switch forwards the frame, h2 discards it on arrival
 - Linux refuses a tunnel MTU above what its underlay can carry, but another device on the path (h2 here) has no such protection
+
+
+## Part 7 – Containers: namespaces plus a filesystem
+
+```
+docker exec c1 ip addr show eth0   -> 11: eth0@if19 ... inet 172.17.0.2/16
+docker exec c1 cat /etc/os-release -> NAME="Alpine Linux", VERSION_ID=3.20.10
+docker exec c1 ps                  -> PID 1 sleep 600, PID 19 ps (only its own processes)
+```
+
+- eth0@if19 = veth pair, other end on Docker's bridge (same as Part 2)
+- Own filesystem (Alpine, not macOS) and own process namespace (PID 1 = sleep)
+- Container = set of namespaces (net, pid, mount, ...) + a filesystem image
