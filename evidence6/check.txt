@@ -1,0 +1,4 @@
+PROBLEM: tenant shop: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
+PROBLEM: tenant bank: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
+PROBLEM: tenant dev: MTU 1500 + 50 = 1550 bytes, 50 more than the underlay MTU 1500
+Fix the design and try again: nothing was built.

@@ -176,8 +176,16 @@ def check_mtu(spec):
     tenant and by how much — or [] if every tenant fits. Like check_paths() in Week 3, it runs
     before anything is built.
     """
+    
     problems = []
-    # TODO: your code here
+    underlay_mtu = int(spec["underlay"]["mtu"])
+    for t in spec["tenants"]:
+        needed = int(t["mtu"]) + VXLAN_OVERHEAD      # tenant packet + VXLAN headers
+        if needed > underlay_mtu:
+            problems.append(
+                f"tenant {t['name']}: MTU {t['mtu']} + {VXLAN_OVERHEAD} = {needed} bytes, "
+                f"{needed - underlay_mtu} more than the underlay MTU {underlay_mtu}"
+            )
     return problems
 
 
