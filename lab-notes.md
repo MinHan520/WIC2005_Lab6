@@ -96,3 +96,29 @@ h1 ping -M do -c 1 -s 1403 ...      -> message too long, mtu=1430
 - IPv6 outer header = 40 bytes vs IPv4 = 20, so overhead = 14 + 8 + 8 + 40 = 70 bytes
 - Tunnel MTU = 1500 - 70 = 1430 (vs 1450 over IPv4)
 - The overlay is still IPv4: the underlay and overlay protocols are independent
+
+
+## Part 6 – MTU mismatch black hole (h2-eth0 MTU set to 1400)
+
+```
+Small ping  h1 ping -c 2 10.16.100.2              -> 0% packet loss
+Large ping  h1 ping -c 2 -W 1 -s 1400 10.16.100.2 -> 100% packet loss
+iperf3      h1 iperf3 -c 10.16.100.2 -t 5         -> 628 Kbits/sec receiver (0 bytes/sec after 1 s)
+
+DF size search: -s 1300 OK, 1322 OK, 1326 OK, 1327 FAIL
+
+Drop counters before -> after 3 large pings
+s1-eth2 tx_dropped: 12 -> 16
+h2-eth0 rx_dropped: 13 -> 16
+
+Fix: h2 ip link set h2-eth0 mtu 1500
+Large ping -> 0% packet loss; iperf3 -> 65.8 Gbits/sec receiver
+
+h1 ip link set vxlan100 mtu 1500 -> RTNETLINK answers: Invalid argument
+```
+
+- Largest working size 1326: 1326 + 28 + 50 = 1404 = h2 MTU 1400 + 4 (Linux allows 4 extra bytes for a VLAN tag)
+- Small pings fit under 1400, but TCP sends full-size segments (1500 bytes on the wire), which are all silently dropped -> retransmits, cwnd collapses, throughput ~0
+- No error is sent back, so it's a "black hole"
+- Both drop counters rise together: the switch forwards the frame, h2 discards it on arrival
+- Linux refuses a tunnel MTU above what its underlay can carry, but another device on the path (h2 here) has no such protection
