@@ -39,3 +39,26 @@ c2:b6:bd:a2:24:94 dev red-br master br0
 - Built 2 namespaces (red, blue), 2 veth pairs, 1 bridge (br0)
 - Ping works; bridge learned veth-red's MAC on port red-br and veth-blue's MAC on port blue-br
 - That is all Mininet does: namespaces + veth pairs + bridge
+
+
+## Part 3 – VXLAN overlay by hand (VNI 100, overlay 10.16.100.0/24)
+
+```
+mininet> h1 ping -c 2 10.16.100.2
+2 packets transmitted, 2 received, 0% packet loss
+
+mininet> h1 ping -c 6 10.16.100.2 > /dev/null &
+mininet> h2 timeout 5 tcpdump -ni h2-eth0 udp port 4789
+IP 10.16.0.1.33565 > 10.16.0.2.4789: VXLAN, flags [I] (0x08), vni 100
+IP 10.16.100.1 > 10.16.100.2: ICMP echo request, id 93, seq 6, length 64
+IP 10.16.0.2.33565 > 10.16.0.1.4789: VXLAN, flags [I] (0x08), vni 100
+IP 10.16.100.2 > 10.16.100.1: ICMP echo reply, id 93, seq 6, length 64
+IP 10.16.0.2.51687 > 10.16.0.1.4789: VXLAN, flags [I] (0x08), vni 100
+ARP, Request who-has 10.16.100.1 tell 10.16.100.2, length 28
+...
+```
+
+- Outer header: underlay 10.16.0.1 <-> 10.16.0.2, UDP 4789, VNI 100
+- Inner: overlay ping 10.16.100.1 <-> 10.16.100.2; ARP also tunnelled (VXLAN carries Ethernet frames)
+- s1 forwarded plain UDP; it didn't know about the tunnel (unlike the Week 5 P4 tunnel, where the switch had to parse the tunnel header)
+- Note: a background tcpdump (&) captured 0 packets on my Mac; running the ping in the background and tcpdump in the foreground worked
